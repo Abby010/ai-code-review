@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { CodeReviewRequest, CodeReviewFeedback } from '@/../shared/types/codeReview';
+
 
 export async function POST(req: NextRequest) {
   try {
