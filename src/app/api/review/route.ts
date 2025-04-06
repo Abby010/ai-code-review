@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { CodeReviewRequest, CodeReviewFeedback } from '@/../shared/types/codeReview';
 import { getCodeReviewFeedback } from '@/../shared/utils/openaiService';
+import { parseFeedback } from '@/../shared/utils/formatFeedback';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,14 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const aiResponse = await getCodeReviewFeedback(body.code);
-
-    let parsedFeedback: CodeReviewFeedback[] = [];
-
-    try {
-      parsedFeedback = JSON.parse(aiResponse);
-    } catch (err) {
-      return NextResponse.json({ error: 'Failed to parse OpenAI response.' }, { status: 502 });
-    }
+    const parsedFeedback: CodeReviewFeedback[] = parseFeedback(aiResponse);
 
     return NextResponse.json({ feedback: parsedFeedback });
   } catch (error) {
