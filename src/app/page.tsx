@@ -4,6 +4,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Landing from '@/components/Landing';
+import { useGithubFile } from '@/hooks/useGithubFile';
 
 export default function Home() {
   const { data: session } = useSession();
@@ -11,6 +12,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [files, setFiles] = useState<any[]>([]);
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+  const { fileContent, loading: fileLoading, fetchFile } = useGithubFile();
 
   useEffect(() => {
     const fetchRepos = async () => {
@@ -44,10 +47,15 @@ export default function Home() {
     fetchFiles();
   }, [selectedRepo]);
 
-  // 🔐 Not logged in
+  useEffect(() => {
+    if (selectedRepo && selectedFilePath) {
+      const [owner, repo] = selectedRepo.split('/');
+      fetchFile(owner, repo, selectedFilePath);
+    }
+  }, [selectedRepo, selectedFilePath]);
+
   if (!session) return <Landing />;
 
-  // ✅ Logged-in UI
   return (
     <main className="p-4">
       <motion.div
@@ -116,11 +124,30 @@ export default function Home() {
           {files.length > 0 ? (
             <ul className="pl-5 list-disc">
               {files.map((file) => (
-                <li key={file.path}>{file.name}</li>
+                <li
+                  key={file.path}
+                  className="cursor-pointer hover:underline text-sm"
+                  onClick={() => setSelectedFilePath(file.path)}
+                >
+                  {file.name}
+                </li>
               ))}
             </ul>
           ) : (
             <p>No files found or loading...</p>
+          )}
+        </div>
+      )}
+
+      {selectedFilePath && (
+        <div className="mt-4">
+          <h3 className="text-md font-medium mb-2">📄 Viewing: {selectedFilePath}</h3>
+          {fileLoading ? (
+            <p>Loading file content...</p>
+          ) : (
+            <pre className="bg-gray-100 text-black text-sm p-4 rounded whitespace-pre-wrap overflow-x-auto">
+              {fileContent}
+            </pre>
           )}
         </div>
       )}
