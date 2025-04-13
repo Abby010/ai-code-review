@@ -1,6 +1,8 @@
 'use client';
+
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import Landing from '@/components/Landing';
 
 export default function Home() {
@@ -10,12 +12,10 @@ export default function Home() {
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [files, setFiles] = useState<any[]>([]);
 
-  // Fetch user repos
   useEffect(() => {
     const fetchRepos = async () => {
       if (!session) return;
       setLoading(true);
-
       try {
         const res = await fetch('/api/github/repos');
         const data = await res.json();
@@ -26,11 +26,9 @@ export default function Home() {
         setLoading(false);
       }
     };
-
     fetchRepos();
   }, [session]);
 
-  // Fetch files when a repo is selected
   useEffect(() => {
     const fetchFiles = async () => {
       if (!selectedRepo) return;
@@ -43,27 +41,37 @@ export default function Home() {
       const data = await res.json();
       setFiles(data.files || []);
     };
-
     fetchFiles();
   }, [selectedRepo]);
 
-  // Not logged in — show animated landing page
-  if (!session) {
-    return <Landing />;
-  }
+  // 🔐 Not logged in
+  if (!session) return <Landing />;
 
+  // ✅ Logged-in UI
   return (
     <main className="p-4">
-      <div className="flex items-center gap-4 mb-4">
-        <img src={session.user?.image || ''} alt="avatar" className="w-10 h-10 rounded-full" />
-        <h1 className="text-xl">Hello, {session.user?.name} 👋</h1>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex items-center gap-4 mb-6"
+      >
+        <img
+          src={session.user?.image || ''}
+          alt="avatar"
+          className="w-12 h-12 rounded-full shadow"
+        />
+        <div>
+          <h1 className="text-2xl font-semibold">Hello, {session.user?.name} 👋</h1>
+          <p className="text-sm text-gray-500">{session.user?.email}</p>
+        </div>
         <button
           onClick={() => signOut()}
           className="ml-auto px-3 py-1 bg-gray-200 rounded"
         >
           Sign out
         </button>
-      </div>
+      </motion.div>
 
       <h2 className="text-lg mb-2 font-semibold">Your GitHub Repositories:</h2>
 
@@ -72,23 +80,38 @@ export default function Home() {
       ) : repos.length === 0 ? (
         <p>No repositories found.</p>
       ) : (
-        <ul className="list-disc pl-5">
+        <motion.ul
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.1 } },
+          }}
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+        >
           {repos.map((repo) => (
-            <li
+            <motion.li
               key={repo.id}
-              className="cursor-pointer hover:underline"
+              variants={{
+                hidden: { opacity: 0, y: 10 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              className="bg-white text-black rounded-lg p-4 shadow hover:shadow-lg transition cursor-pointer"
               onClick={() => setSelectedRepo(repo.fullName)}
             >
-              {repo.name} {repo.private && '(private)'}
-            </li>
+              <h3 className="font-semibold">{repo.name}</h3>
+              {repo.private && (
+                <span className="text-xs text-gray-500">🔒 Private</span>
+              )}
+            </motion.li>
           ))}
-        </ul>
+        </motion.ul>
       )}
 
       {selectedRepo && (
         <div className="mt-4">
           <p className="text-sm text-gray-600 mb-2">
-            Selected repo: <strong>{selectedRepo}</strong>
+            📁 Selected repo: <strong>{selectedRepo}</strong>
           </p>
           {files.length > 0 ? (
             <ul className="pl-5 list-disc">
