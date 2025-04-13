@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "framer-motion": "^12.6.5",
     "next": "15.2.4",
     "next-auth": "^4.24.11",
     "openai": "^4.91.1",
