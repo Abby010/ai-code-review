@@ -3,8 +3,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { fetchRepoFiles } from '@/../shared/utils/githubService';
 
+type SessionWithToken = {
+  accessToken?: string;
+};
+
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions as any);
+  const session = (await getServerSession(authOptions as any)) as SessionWithToken;
+
   if (!session || !session.accessToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
