@@ -2,6 +2,8 @@
 
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+
 
 export default function Home() {
   const { data: session } = useSession();
@@ -53,8 +55,9 @@ export default function Home() {
           Sign out
         </button>
       </div>
-
+  
       <h2 className="text-lg mb-2 font-semibold">Your GitHub Repositories:</h2>
+  
       {loading ? (
         <p>Loading...</p>
       ) : repos.length === 0 ? (
@@ -62,9 +65,21 @@ export default function Home() {
       ) : (
         <ul className="list-disc pl-5">
           {repos.map((repo) => (
-            <li key={repo.id}>{repo.name} {repo.private && '(private)'}</li>
+            <li
+              key={repo.id}
+              className="cursor-pointer hover:underline"
+              onClick={() => setSelectedRepo(repo.fullName)}
+            >
+              {repo.name} {repo.private && '(private)'}
+            </li>
           ))}
         </ul>
+      )}
+  
+      {selectedRepo && (
+        <p className="mt-4 text-sm text-gray-600">
+          📁 Selected repo: <strong>{selectedRepo}</strong>
+        </p>
       )}
     </main>
   );
