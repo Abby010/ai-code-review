@@ -2,14 +2,15 @@
 
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
-
 
 export default function Home() {
   const { data: session } = useSession();
   const [repos, setRepos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+  const [files, setFiles] = useState<any[]>([]);
 
+  // Fetch user repos
   useEffect(() => {
     const fetchRepos = async () => {
       if (!session) return;
@@ -29,6 +30,23 @@ export default function Home() {
     fetchRepos();
   }, [session]);
 
+  // Fetch files when a repo is selected
+  useEffect(() => {
+    const fetchFiles = async () => {
+      if (!selectedRepo) return;
+      const res = await fetch('/api/github/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName: selectedRepo }),
+      });
+      const data = await res.json();
+      setFiles(data.files || []);
+    };
+
+    fetchFiles();
+  }, [selectedRepo]);
+
+  // If not logged in
   if (!session) {
     return (
       <main className="p-4">
@@ -43,6 +61,7 @@ export default function Home() {
     );
   }
 
+  // Logged-in view
   return (
     <main className="p-4">
       <div className="flex items-center gap-4 mb-4">
@@ -55,9 +74,9 @@ export default function Home() {
           Sign out
         </button>
       </div>
-  
+
       <h2 className="text-lg mb-2 font-semibold">Your GitHub Repositories:</h2>
-  
+
       {loading ? (
         <p>Loading...</p>
       ) : repos.length === 0 ? (
@@ -75,11 +94,22 @@ export default function Home() {
           ))}
         </ul>
       )}
-  
+
       {selectedRepo && (
-        <p className="mt-4 text-sm text-gray-600">
-          📁 Selected repo: <strong>{selectedRepo}</strong>
-        </p>
+        <div className="mt-4">
+          <p className="text-sm text-gray-600 mb-2">
+            📁 Selected repo: <strong>{selectedRepo}</strong>
+          </p>
+          {files.length > 0 ? (
+            <ul className="pl-5 list-disc">
+              {files.map((file) => (
+                <li key={file.path}>{file.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No files found or loading...</p>
+          )}
+        </div>
       )}
     </main>
   );
