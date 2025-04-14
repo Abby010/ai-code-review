@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import Landing from '@/components/Landing';
 import { useGithubFile } from '@/hooks/useGithubFile';
 import ReviewButton from '@/components/ReviewButton';
+import CodeReviewEditor from '@/components/CodeReviewEditor';
 
 export default function Home() {
   const { data: session } = useSession();
@@ -15,6 +16,7 @@ export default function Home() {
   const [files, setFiles] = useState<any[]>([]);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const { fileContent, loading: fileLoading, fetchFile } = useGithubFile();
+  const [feedback, setFeedback] = useState<{ line: number; message: string }[]>([]);
 
   useEffect(() => {
     const fetchRepos = async () => {
@@ -106,7 +108,11 @@ export default function Home() {
                 visible: { opacity: 1, y: 0 },
               }}
               className="bg-white text-black rounded-lg p-4 shadow hover:shadow-lg transition cursor-pointer"
-              onClick={() => setSelectedRepo(repo.fullName)}
+              onClick={() => {
+                setSelectedRepo(repo.fullName);
+                setSelectedFilePath(null);
+                setFeedback([]);
+              }}
             >
               <h3 className="font-semibold">{repo.name}</h3>
               {repo.private && (
@@ -128,7 +134,10 @@ export default function Home() {
                 <li
                   key={file.path}
                   className="cursor-pointer hover:underline text-sm"
-                  onClick={() => setSelectedFilePath(file.path)}
+                  onClick={() => {
+                    setSelectedFilePath(file.path);
+                    setFeedback([]);
+                  }}
                 >
                   {file.name}
                 </li>
@@ -141,16 +150,14 @@ export default function Home() {
       )}
 
       {selectedFilePath && (
-        <div className="mt-4">
+        <div className="mt-6">
           <h3 className="text-md font-medium mb-2">📄 Viewing: {selectedFilePath}</h3>
           {fileLoading ? (
             <p>Loading file content...</p>
           ) : (
             <>
-              <pre className="bg-gray-100 text-black text-sm p-4 rounded whitespace-pre-wrap overflow-x-auto">
-                {fileContent}
-              </pre>
               <ReviewButton code={fileContent} />
+              <CodeReviewEditor code={fileContent} feedback={feedback} />
             </>
           )}
         </div>
