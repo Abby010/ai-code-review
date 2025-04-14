@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Landing from '@/components/Landing';
 import { useGithubFile } from '@/hooks/useGithubFile';
+import ReviewButton from '@/components/ReviewButton';
 
 export default function Home() {
   const { data: session } = useSession();
@@ -145,9 +146,12 @@ export default function Home() {
           {fileLoading ? (
             <p>Loading file content...</p>
           ) : (
-            <pre className="bg-gray-100 text-black text-sm p-4 rounded whitespace-pre-wrap overflow-x-auto">
-              {fileContent}
-            </pre>
+            <>
+              <pre className="bg-gray-100 text-black text-sm p-4 rounded whitespace-pre-wrap overflow-x-auto">
+                {fileContent}
+              </pre>
+              <ReviewButton code={fileContent} />
+            </>
           )}
         </div>
       )}
